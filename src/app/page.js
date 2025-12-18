@@ -234,7 +234,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-600 relative overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-600 relative overflow-y-hidden font-sans">
        {/* Background Blobs */}
       <div className="fixed bg-blue-200 w-96 h-96 top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl opacity-50 -z-10"></div>
       <div className="fixed bg-purple-200 w-96 h-96 bottom-0 right-0 translate-x-1/3 translate-y-1/3 rounded-full blur-3xl opacity-50 -z-10"></div>
@@ -244,7 +244,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-10">
             <div>
                 <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-                    <i className="fas fa-layer-group text-indigo-600 mr-3"></i>人员考勤驾驶舱
+                    <i className="fas fa-layer-group text-indigo-600 mr-3"></i>{process.env.NEXT_PUBLIC_WEBSITE_TITLE}
                 </h1>
                 <p className="text-slate-500 mt-1 text-sm">实时监控与数据可视化分析平台</p>
             </div>
@@ -341,7 +341,7 @@ export default function Dashboard() {
             <p className="text-slate-400 text-xs flex items-center gap-2">
                 <span><i className="fas fa-sync-alt mr-1"></i>数据更新: {currentTime}</span>
                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                <span>系统版本: 2.1.0</span>
+                <span>系统版本: {process.env.NEXT_PUBLIC_VERSION}</span>
             </p>
             <p className="text-slate-300 text-xs mt-2">© 2023 人员考勤信息展示系统</p>
         </div>
