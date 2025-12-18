@@ -19,13 +19,65 @@ export default function Dashboard() {
   // Chart Instances to destroy before re-rendering
   const charts = useRef({ trend: null, late: null, overtime: null, batch: null });
 
-  // 1. Time Clock
+  // 辅助函数：获取周数
+  const getWeekNumber = (d) => {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return weekNo;
+  };
+
+  // 辅助函数：获取周一的日期
+  const getMonday = (d) => {
+    d = new Date(d);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+  };
+
+  // 辅助函数：获取周日的日期
+  const getSunday = (d) => {
+    const monday = getMonday(d);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return sunday;
+  };
+
+  // 辅助函数：获取季度
+  const getQuarter = (d) => {
+    const month = d.getMonth();
+    return Math.floor(month / 3) + 1;
+  };
+
+  // 1. Time Clock with different dimension display
   useEffect(() => {
-    const updateTime = () => setCurrentTime(new Date().toLocaleString('zh-CN'));
+    const updateTime = () => {
+      const now = new Date();
+      const options = {
+        day: {
+          date: now.toLocaleDateString('zh-CN'),
+          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+        },
+        week: {
+          date: `第${getWeekNumber(now)}周 (${getMonday(now).toLocaleDateString('zh-CN')} - ${getSunday(now).toLocaleDateString('zh-CN')})`,
+          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+        },
+        month: {
+          date: `${now.getFullYear()}年${now.getMonth() + 1}月`,
+          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+        },
+        quarter: {
+          date: `${now.getFullYear()}年第${getQuarter(now)}季度`,
+          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+        }
+      };
+      setCurrentTime(`${options[dimension].date} ${options[dimension].weekday}`);
+    };
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dimension]);
 
   // 2. Fetch Data
   useEffect(() => {
