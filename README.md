@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
@@ -38,4 +37,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 =======
 # attendance_display
 展示从数据库获取的考勤信息，本项目由gemini pro编写测试，用于测试各大模型的代码编写能力
->>>>>>> 31dd668498190a75992527e239da1cce1e409792
