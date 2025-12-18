@@ -211,7 +211,7 @@ export default function Dashboard() {
                 icon="fa-user-check" 
                 colorClass="text-emerald-600" 
                 bgClass="bg-emerald-50"
-                subText={`出勤率 ${Math.round((data?.attendanceStats.totalPresent/data?.attendanceStats.totalEmployees)*100) || 0}%`}
+                subText={`出勤率 ${data?.attendanceStats.totalEmployees ? Math.round((data?.attendanceStats.totalPresent/data?.attendanceStats.totalEmployees)*100) : 0}%`}
             />
             <KpiCard 
                 title="迟到人数" 

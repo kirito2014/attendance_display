@@ -757,7 +757,7 @@ let data = [];
       
       if (results && results.length > 0) {
         data = results.map(row => ({
-          month: row.month,
+          day: row.day,
           late_count: row.late_count
         }));
       } else {
