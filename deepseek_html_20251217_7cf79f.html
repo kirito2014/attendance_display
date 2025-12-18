@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人员考勤信息展示系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* 背景装饰 */
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="text-slate-600 relative overflow-x-hidden min-h-screen">
+    
+    <div class="bg-blob bg-blue-200 w-96 h-96 top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="bg-blob bg-purple-200 w-96 h-96 bottom-0 right-0 translate-x-1/3 translate-y-1/3"></div>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 tracking-tight">
+                    <i class="fas fa-layer-group text-indigo-600 mr-3"></i>人员考勤驾驶舱
+                </h1>
+                <p class="text-slate-500 mt-1 text-sm">实时监控与数据可视化分析平台</p>
+            </div>
+            
+            <div class="mt-4 md:mt-0">
+                <div class="inline-flex items-center px-5 py-2.5 bg-white rounded-full shadow-sm border border-slate-200">
+                    <div class="w-2 h-2 rounded-full bg-green-500 mr-3 animate-pulse"></div>
+                    <span id="currentTime" class="text-sm font-semibold text-slate-700 tabular-nums">加载中...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-center mb-10">
+            <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 inline-flex flex-wrap justify-center gap-1">
+                <button id="dayBtn" class="dimension-btn active px-6 py-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none bg-indigo-600 text-white shadow-md">
+                    日视图
+                </button>
+                <button id="weekBtn" class="dimension-btn px-6 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all duration-200 focus:outline-none">
+                    周视图
+                </button>
+                <button id="monthBtn" class="dimension-btn px-6 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all duration-200 focus:outline-none">
+                    月视图
+                </button>
+                <button id="quarterBtn" class="dimension-btn px-6 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-all duration-200 focus:outline-none">
+                    季视图
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:-translate-y-1 transition-transform duration-300">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 text-xl">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                        <i class="fas fa-arrow-up mr-1"></i>2
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">总员工数</p>
+                    <h3 id="totalEmployees" class="text-3xl font-bold text-slate-800 mt-1">156</h3>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:-translate-y-1 transition-transform duration-300">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                        出勤 91%
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">实到人数</p>
+                    <h3 id="presentEmployees" class="text-3xl font-bold text-slate-800 mt-1">142</h3>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:-translate-y-1 transition-transform duration-300">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                        <i class="fas fa-arrow-down mr-1"></i>3
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">迟到人数</p>
+                    <h3 id="lateEmployees" class="text-3xl font-bold text-slate-800 mt-1">14</h3>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:-translate-y-1 transition-transform duration-300">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 text-xl">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                        <i class="fas fa-arrow-down mr-1"></i>2.1%
+                    </span>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">迟到率</p>
+                    <h3 id="lateRate" class="text-3xl font-bold text-slate-800 mt-1">8.97%</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">签到趋势</h3>
+                        <p class="text-xs text-slate-400 mt-1" id="chart1Subtitle">24小时内签到人数曲线</p>
+                    </div>
+                    <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="signTrendChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">迟到分布</h3>
+                        <p class="text-xs text-slate-400 mt-1" id="chart2Subtitle">迟到人员所在时间段分布</p>
+                    </div>
+                    <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="lateDistributionChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">加班时长</h3>
+                        <p class="text-xs text-slate-400 mt-1" id="chart3Subtitle">各部门加班时长统计</p>
+                    </div>
+                    <div class="p-2 bg-purple-50 rounded-lg text-purple-600">
+                        <i class="fas fa-business-time"></i>
+                    </div>
+                </div>
+                <div class="h-64">
+                    <canvas id="overtimeChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">签到批次</h3>
+                        <p class="text-xs text-slate-400 mt-1" id="chart4Subtitle">各打卡批次人数占比</p>
+                    </div>
+                    <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                </div>
+                <div class="h-64 flex justify-center">
+                    <canvas id="signBatchChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-slate-200 pt-8 flex flex-col items-center">
+            <p class="text-slate-400 text-xs flex items-center gap-2">
+                <span><i class="fas fa-sync-alt mr-1"></i>数据更新: <span id="updateTime">--</span></span>
+                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span>系统版本: 2.1.0</span>
+            </p>
+            <p class="text-slate-300 text-xs mt-2">© 2023 人员考勤信息展示系统</p>
+        </div>
+    </div>
+
+    <script>
+        // 初始化变量
+        let currentDimension = 'day';
+        let signTrendChart, lateDistributionChart, overtimeChart, signBatchChart;
+
+        // 时间维度切换
+        document.getElementById('dayBtn').addEventListener('click', () => switchDimension('day'));
+        document.getElementById('weekBtn').addEventListener('click', () => switchDimension('week'));
+        document.getElementById('monthBtn').addEventListener('click', () => switchDimension('month'));
+        document.getElementById('quarterBtn').addEventListener('click', () => switchDimension('quarter'));
+
+        // 切换维度函数
+        function switchDimension(dimension) {
+            // 更新按钮样式 - 使用新的视觉类名
+            document.querySelectorAll('.dimension-btn').forEach(btn => {
+                // 移除激活状态
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'active');
+                // 添加非激活状态
+                btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:bg-slate-50');
+            });
+            
+            const activeBtn = document.getElementById(dimension + 'Btn');
+            // 移除非激活状态
+            activeBtn.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:bg-slate-50');
+            // 添加激活状态
+            activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'active');
+            
+            // 更新当前维度
+            currentDimension = dimension;
+            
+            // 更新页面数据
+            updateDataByDimension(dimension);
+            updateChartsByDimension(dimension);
+            
+            // 更新时间显示
+            updateTimeDisplay(dimension);
+        }
+
+        // 根据维度更新数据
+        function updateDataByDimension(dimension) {
+            const data = {
+                day: { total: 156, present: 142, late: 14, rate: '8.97%' },
+                week: { total: 156, present: 138, late: 18, rate: '11.54%' },
+                month: { total: 158, present: 145, late: 13, rate: '8.23%' },
+                quarter: { total: 162, present: 150, late: 12, rate: '7.41%' }
+            };
+            
+            const dimData = data[dimension];
+            
+            document.getElementById('totalEmployees').textContent = dimData.total;
+            document.getElementById('presentEmployees').textContent = dimData.present;
+            document.getElementById('lateEmployees').textContent = dimData.late;
+            document.getElementById('lateRate').textContent = dimData.rate;
+            
+            // 更新数据时间
+            const now = new Date();
+            document.getElementById('updateTime').textContent = now.toLocaleString('zh-CN');
+        }
+
+        // 更新时间显示
+        function updateTimeDisplay(dimension) {
+            const timeDisplay = document.getElementById('currentTime');
+            const now = new Date();
+            
+            const options = {
+                day: { 
+                    date: now.toLocaleDateString('zh-CN'),
+                    weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+                },
+                week: {
+                    date: `第${getWeekNumber(now)}周 (${getMonday(now).toLocaleDateString('zh-CN')} - ${getSunday(now).toLocaleDateString('zh-CN')})`,
+                    weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+                },
+                month: {
+                    date: `${now.getFullYear()}年${now.getMonth() + 1}月`,
+                    weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+                },
+                quarter: {
+                    date: `${now.getFullYear()}年第${getQuarter(now)}季度`,
+                    weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+                }
+            };
+            
+            timeDisplay.textContent = `${options[dimension].date} ${options[dimension].weekday}`;
+        }
+
+        // 辅助函数：获取周数
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+
+        // 辅助函数：获取周一的日期
+        function getMonday(d) {
+            d = new Date(d);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        // 辅助函数：获取周日的日期
+        function getSunday(d) {
+            const monday = getMonday(d);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            return sunday;
+        }
+
+        // 辅助函数：获取季度
+        function getQuarter(d) {
+            const month = d.getMonth();
+            return Math.floor(month / 3) + 1;
+        }
+
+        // 根据维度更新图表
+        function updateChartsByDimension(dimension) {
+            const subtitles = {
+                day: ['24小时内签到人数曲线', '迟到人员所在时间段分布', '各部门加班时长统计', '各打卡批次人数占比'],
+                week: ['本周每日签到人数趋势', '本周每日迟到人数分布', '本周各部门加班时长统计', '本周各天签到批次分布'],
+                month: ['本月每日签到人数趋势', '本月每日迟到人数分布', '本月各部门加班时长统计', '本月各周签到批次分布'],
+                quarter: ['本季度每月签到人数趋势', '本季度每月迟到人数分布', '本季度各部门加班时长统计', '本季度各月签到批次分布']
+            };
+            
+            document.getElementById('chart1Subtitle').textContent = subtitles[dimension][0];
+            document.getElementById('chart2Subtitle').textContent = subtitles[dimension][1];
+            document.getElementById('chart3Subtitle').textContent = subtitles[dimension][2];
+            document.getElementById('chart4Subtitle').textContent = subtitles[dimension][3];
+            
+            updateChartData(dimension);
+        }
+
+        // 全局图表配置 - 优化视觉
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.scale.grid.color = '#f1f5f9';
+
+        // 初始化图表
+        function initCharts() {
+            // 签到趋势图
+            const signTrendCtx = document.getElementById('signTrendChart').getContext('2d');
+            const gradientBlue = signTrendCtx.createLinearGradient(0, 0, 0, 400);
+            gradientBlue.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+            gradientBlue.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+            signTrendChart = new Chart(signTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: '签到人数',
+                        data: [2, 5, 85, 12, 8, 3],
+                        borderColor: '#4f46e5', // indigo-600
+                        backgroundColor: gradientBlue,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#4f46e5',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 迟到分布图
+            const lateDistributionCtx = document.getElementById('lateDistributionChart').getContext('2d');
+            lateDistributionChart = new Chart(lateDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00'],
+                    datasets: [{
+                        label: '迟到人数',
+                        data: [12, 8, 3, 1, 0],
+                        backgroundColor: '#f59e0b', // amber-500
+                        borderRadius: 6,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 加班时长图
+            const overtimeCtx = document.getElementById('overtimeChart').getContext('2d');
+            overtimeChart = new Chart(overtimeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['研发部', '市场部', '人事部', '财务部', '行政部'],
+                    datasets: [{
+                        label: '加班时长(小时)',
+                        data: [45, 28, 15, 10, 22],
+                        backgroundColor: '#8b5cf6', // violet-500
+                        borderRadius: 6,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // 签到批次分布图
+            const signBatchCtx = document.getElementById('signBatchChart').getContext('2d');
+            signBatchChart = new Chart(signBatchCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['08:15批次', '08:50批次', '其他批次'],
+                    datasets: [{
+                        data: [85, 45, 26],
+                        backgroundColor: [
+                            '#10b981', // emerald-500
+                            '#3b82f6', // blue-500
+                            '#cbd5e1'  // slate-300
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 更新图表数据
+        function updateChartData(dimension) {
+            const dataSets = {
+                day: {
+                    signTrend: [2, 5, 85, 12, 8, 3],
+                    lateDistribution: [12, 8, 3, 1, 0],
+                    overtime: [45, 28, 15, 10, 22],
+                    signBatch: [85, 45, 26]
+                },
+                week: {
+                    signTrend: [120, 118, 122, 119, 123, 125, 115],
+                    lateDistribution: [18, 15, 12, 10, 16, 14, 13],
+                    overtime: [210, 150, 85, 70, 110],
+                    signBatch: [600, 320, 172]
+                },
+                month: {
+                    signTrend: Array.from({length: 30}, (_, i) => 120 + Math.floor(Math.random() * 20) - 10),
+                    lateDistribution: Array.from({length: 30}, (_, i) => 10 + Math.floor(Math.random() * 10)),
+                    overtime: [980, 650, 400, 300, 550],
+                    signBatch: [1800, 950, 650]
+                },
+                quarter: {
+                    signTrend: [3650, 3720, 3680],
+                    lateDistribution: [320, 280, 310],
+                    overtime: [2850, 1950, 1200, 900, 1650],
+                    signBatch: [5400, 2850, 1950]
+                }
+            };
+
+            const data = dataSets[dimension];
+            
+            // 更新签到趋势图
+            if (dimension === 'day') {
+                signTrendChart.data.labels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'];
+            } else if (dimension === 'week') {
+                signTrendChart.data.labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            } else if (dimension === 'month') {
+                signTrendChart.data.labels = Array.from({length: 30}, (_, i) => `${i+1}日`);
+            } else {
+                signTrendChart.data.labels = ['第1月', '第2月', '第3月'];
+            }
+            signTrendChart.data.datasets[0].data = data.signTrend;
+            
+            // 更新迟到分布图
+            if (dimension === 'day') {
+                lateDistributionChart.data.labels = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '13:00-14:00'];
+            } else if (dimension === 'week') {
+                lateDistributionChart.data.labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+            } else if (dimension === 'month') {
+                lateDistributionChart.data.labels = ['第1周', '第2周', '第3周', '第4周', '第5周'];
+            } else {
+                lateDistributionChart.data.labels = ['第1月', '第2月', '第3月'];
+            }
+            lateDistributionChart.data.datasets[0].data = data.lateDistribution;
+            
+            // 更新加班时长图
+            overtimeChart.data.datasets[0].data = data.overtime;
+            
+            // 更新签到批次分布图
+            if (dimension === 'day') {
+                signBatchChart.data.labels = ['08:15批次', '08:50批次', '其他批次'];
+            } else {
+                signBatchChart.data.labels = ['准时批次', '延迟批次', '其他批次'];
+            }
+            signBatchChart.data.datasets[0].data = data.signBatch;
+            
+            // 更新所有图表
+            signTrendChart.update();
+            lateDistributionChart.update();
+            overtimeChart.update();
+            signBatchChart.update();
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化图表
+            initCharts();
+            
+            // 设置初始时间维度为日维度
+            // 注意：这里需要确保初始化状态的视觉一致性
+            const dayBtn = document.getElementById('dayBtn');
+            dayBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'active');
+            
+            updateTimeDisplay('day');
+            
+            // 模拟实时数据更新
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('updateTime').textContent = now.toLocaleString('zh-CN');
+            }, 60000);
+            
+            // 首次立即更新时间
+            document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN');
+        });
+    </script>
+</body>
+</html>
