@@ -198,7 +198,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <KpiCard 
                 title="总员工数" 
-                value={data?.attendanceStats.totalEmployees || '-'} 
+                value={data?.attendanceStats.totalEmployees ?? '-'} 
                 icon="fa-users" 
                 colorClass="text-blue-600" 
                 bgClass="bg-blue-50"
@@ -207,7 +207,7 @@ export default function Dashboard() {
             />
             <KpiCard 
                 title="实到人数" 
-                value={data?.attendanceStats.totalPresent || '-'} 
+                value={data?.attendanceStats.totalPresent ?? '-'} 
                 icon="fa-user-check" 
                 colorClass="text-emerald-600" 
                 bgClass="bg-emerald-50"
@@ -215,7 +215,7 @@ export default function Dashboard() {
             />
             <KpiCard 
                 title="迟到人数" 
-                value={data?.attendanceStats.lateCount || '-'} 
+                value={data?.attendanceStats.lateCount ?? '-'} 
                 icon="fa-clock" 
                 colorClass="text-amber-500" 
                 bgClass="bg-amber-50"
@@ -224,7 +224,7 @@ export default function Dashboard() {
             />
             <KpiCard 
                 title="迟到率" 
-                value={(data?.attendanceStats.lateRate || 0) + '%'} 
+                value={(data?.attendanceStats.lateRate ?? 0) + '%'} 
                 icon="fa-percentage" 
                 colorClass="text-rose-500" 
                 bgClass="bg-rose-50"

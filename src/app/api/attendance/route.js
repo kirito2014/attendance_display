@@ -841,12 +841,16 @@ export async function generateBatchDistribution() {
   let data = [];
   
   try {
-    const query = `
-      WITH latest_date AS (
-        SELECT max(atten_dt) AS max_dt 
-        FROM ods_sunline.ods_in_bank_psn_atten_dtl_in_bank_exp
-      ),
-      batch_data AS (
+    // 获取最新日期
+    const latestDateQuery = `
+      SELECT max(atten_dt) AS max_dt 
+      FROM ods_sunline.ods_in_bank_psn_atten_dtl_in_bank_exp
+    `;
+    const latestDateResult = await queryDb(latestDateQuery);
+    const latestDate = latestDateResult && latestDateResult.length > 0 ? latestDateResult[0].max_dt : null;
+    
+    if (latestDate) {
+      const query = `
         SELECT 
           p3.atten_batch AS batch,
           COUNT(*) AS count
@@ -857,21 +861,22 @@ export async function generateBatchDistribution() {
         INNER JOIN ods_sunline.ods_in_bank_atten_base_info p3 
           ON p2.emply_name = p3.emply_name
         WHERE
-          p1.ATTEN_DT = (SELECT max_dt FROM latest_date)
+          p1.ATTEN_DT = ?
           AND p1.EARLIEST_SINGIN_TM IS NOT NULL
         GROUP BY
           p3.atten_batch
-      )
-      SELECT * FROM batch_data;
-    `;
-    const results = await queryDb(query);
+      `;
+      const results = await queryDb(query, [latestDate]);
+      
+      if (results && results.length > 0) {
+        data = results.map(row => ({
+          batch: row.batch,
+          count: row.count
+        }));
+      }
+    }
     
-    if (results && results.length > 0) {
-      data = results.map(row => ({
-        batch: row.batch,
-        count: row.count
-      }));
-    } else {
+    if (data.length === 0) {
       // 模拟数据
       data = [
         { batch: '0815', count: 85 },
@@ -916,8 +921,7 @@ export async function generateAttendanceStats() {
         INNER JOIN ods_sunline.ods_sunline_psn_binfo p2 
           ON p1.EMPLY_NAME = p2.EMPLY_NAME AND p2.IMPL_FLAG = 'Y'
         WHERE
-          p1.ATTEN_DT = ?
-          AND p1.EARLIEST_SINGIN_TM IS NOT NULL
+          p1.ATTEN_DT = ? AND p1.EARLIEST_SINGIN_TM IS NOT NULL
       `;
       const checkinResult = await queryDb(checkinQuery, [latestDate]);
       stats.checkinCount = checkinResult && checkinResult.length > 0 ? checkinResult[0].checkin_count : 0;
