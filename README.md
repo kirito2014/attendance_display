@@ -1,0 +1,2 @@
+# attendance_display
+展示从数据库获取的考勤信息，本项目由gemini pro编写测试，用于测试各大模型的代码编写能力
