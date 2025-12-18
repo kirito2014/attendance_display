@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState('');
+  const [timeFormat, setTimeFormat] = useState('default'); // 'default' or 'detailed'
 
   // Chart References
   const trendChartRef = useRef(null);
@@ -54,30 +55,58 @@ export default function Dashboard() {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const options = {
-        day: {
-          date: now.toLocaleDateString('zh-CN'),
-          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
-        },
-        week: {
-          date: `第${getWeekNumber(now)}周 (${getMonday(now).toLocaleDateString('zh-CN')} - ${getSunday(now).toLocaleDateString('zh-CN')})`,
-          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
-        },
-        month: {
-          date: `${now.getFullYear()}年${now.getMonth() + 1}月`,
-          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
-        },
-        quarter: {
-          date: `${now.getFullYear()}年第${getQuarter(now)}季度`,
-          weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+      
+      // 日维度下的详细时间格式
+      if (dimension === 'day' && timeFormat === 'detailed') {
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = now.getHours();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        // 确定时间段
+        let period = '';
+        if (hours >= 5 && hours < 12) {
+          period = '早上';
+        } else if (hours >= 12 && hours < 14) {
+          period = '中午';
+        } else if (hours >= 14 && hours < 18) {
+          period = '下午';
+        } else if (hours >= 18 && hours < 22) {
+          period = '晚上';
+        } else {
+          period = '凌晨';
         }
-      };
-      setCurrentTime(`${options[dimension].date} ${options[dimension].weekday}`);
+        
+        setCurrentTime(`${year}年${month}月${day}日 ${period} ${hours}:${minutes}:${seconds}`);
+      } else {
+        // 默认的时间格式
+        const options = {
+          day: {
+            date: now.toLocaleDateString('zh-CN'),
+            weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+          },
+          week: {
+            date: `第${getWeekNumber(now)}周 (${getMonday(now).toLocaleDateString('zh-CN')} - ${getSunday(now).toLocaleDateString('zh-CN')})`,
+            weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+          },
+          month: {
+            date: `${now.getFullYear()}年${now.getMonth() + 1}月`,
+            weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+          },
+          quarter: {
+            date: `${now.getFullYear()}年第${getQuarter(now)}季度`,
+            weekday: now.toLocaleDateString('zh-CN', { weekday: 'long' })
+          }
+        };
+        setCurrentTime(`${options[dimension].date} ${options[dimension].weekday}`);
+      }
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, [dimension]);
+  }, [dimension, timeFormat]);
 
   // 2. Fetch Data
   useEffect(() => {
@@ -220,7 +249,11 @@ export default function Dashboard() {
                 <p className="text-slate-500 mt-1 text-sm">实时监控与数据可视化分析平台</p>
             </div>
             <div className="mt-4 md:mt-0">
-                <div className="inline-flex items-center px-5 py-2.5 bg-white rounded-full shadow-sm border border-slate-200">
+                <div 
+                    className="inline-flex items-center px-5 py-2.5 bg-white rounded-full shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-shadow duration-200"
+                    onClick={() => setTimeFormat(timeFormat === 'default' ? 'detailed' : 'default')}
+                    title="点击切换时间格式"
+                >
                     <div className="w-2 h-2 rounded-full bg-green-500 mr-3 animate-pulse"></div>
                     <span className="text-sm font-semibold text-slate-700 tabular-nums">{currentTime}</span>
                 </div>
@@ -325,16 +358,18 @@ function KpiCard({ title, value, icon, colorClass, bgClass, trend, trendUp, subT
                 <div className={`w-12 h-12 rounded-2xl ${bgClass} flex items-center justify-center ${colorClass} text-xl`}>
                     <i className={`fas ${icon}`}></i>
                 </div>
-                {trend && (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700`}>
-                        <i className={`fas ${trendUp ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>{trend}
-                    </span>
-                )}
-                 {subText && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                        {subText}
-                    </span>
-                )}
+                <div className="flex gap-2">
+                    {trend && (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700`}>
+                            <i className={`fas ${trendUp ? 'fa-arrow-up' : 'fa-arrow-down'} mr-1`}></i>{trend}
+                        </span>
+                    )}
+                     {subText && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                            {subText}
+                        </span>
+                    )}
+                </div>
             </div>
             <div>
                 <p className="text-sm font-medium text-slate-500">{title}</p>
