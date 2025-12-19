@@ -14,15 +14,28 @@ export async function GET(request) {
     // 获取所有配置结构
     const dimensions = await queryDb('SELECT * FROM sys_dimensions ORDER BY sort_order');
     
-    // 获取每个维度下的 cards 和 charts
-    for (let dim of dimensions) {
-      dim.cards = await queryDb('SELECT * FROM sys_kpi_cards WHERE dimension_id = ? ORDER BY sort_order', [dim.id]);
-      dim.charts = await queryDb('SELECT * FROM sys_charts WHERE dimension_id = ? ORDER BY sort_order', [dim.id]);
-    }
+    if (dimensions.length === 0) return NextResponse.json({ success: true, data: [] });
+
+    const dimIds = dimensions.map(d => d.id);
+    // 生成占位符: ?,?,?
+    const placeholders = dimIds.map(() => '?').join(',');
+
+    // 并行查询所有相关的 cards 和 charts
+    const [allCards, allCharts] = await Promise.all([
+      queryDb(`SELECT * FROM sys_kpi_cards WHERE dimension_id IN (${placeholders}) ORDER BY sort_order`, dimIds),
+      queryDb(`SELECT * FROM sys_charts WHERE dimension_id IN (${placeholders}) ORDER BY sort_order`, dimIds)
+    ]);
+
+    // 在内存中组装
+    dimensions.forEach(dim => {
+      dim.cards = allCards.filter(c => c.dimension_id === dim.id);
+      dim.charts = allCharts.filter(c => c.dimension_id === dim.id);
+    });
     
     return NextResponse.json({ success: true, data: dimensions });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error in GET /api/admin/config:', error);
+    return NextResponse.json({ success: false, error: 'Failed to fetch configuration' }, { status: 500 });
   }
 }
 
@@ -33,7 +46,16 @@ export async function POST(request) {
 
   const { type, data } = await request.json(); // type: 'dimension', 'card', 'chart', 'update_dimension', 'update_card', 'update_chart', 'delete_dimension', 'delete_card', 'delete_chart'
   
+  // 禁止的SQL关键字，防止危险操作
+  const FORBIDDEN_KEYWORDS = /;\s*(DROP|DELETE|UPDATE|INSERT|ALTER|TRUNCATE|CREATE|DROP|RENAME|GRANT|REVOKE)/i;
+  
   try {
+    // 验证SQL查询，禁止危险操作
+    if ((type === 'card' || type === 'chart' || type === 'update_card' || type === 'update_chart') && 
+        data.sql_query && FORBIDDEN_KEYWORDS.test(data.sql_query)) {
+      return NextResponse.json({ success: false, error: 'SQL contains forbidden keywords' }, { status: 400 });
+    }
+    
     if (type === 'dimension') {
       const res = await queryDb('INSERT INTO sys_dimensions (key_name, label, sort_order) VALUES (?, ?, ?)', 
         [data.key_name, data.label, data.sort_order || 0]);
@@ -88,7 +110,8 @@ export async function POST(request) {
        return NextResponse.json({ success: true });
     }
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error in POST /api/admin/config:', error);
+    return NextResponse.json({ success: false, error: 'Failed to process request' }, { status: 500 });
   }
   return NextResponse.json({ success: false, error: 'Invalid type' }, { status: 400 });
 }

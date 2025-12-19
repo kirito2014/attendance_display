@@ -10,26 +10,26 @@ const dbConfig = {
   port: parseInt(process.env.NEXT_SECRET_DB_PORT || '3306'),
 };
 
+// 创建全局单例连接池
+const pool = mysql.createPool({
+  ...dbConfig,
+  waitForConnections: true,
+  connectionLimit: 10, // 根据服务器负载调整
+  queueLimit: 0
+});
+
 export async function queryDb(query, params = []) {
-  const connection = await mysql.createConnection(dbConfig);
-  try {
-    const [results] = await connection.execute(query, params);
-    return results;
-  } finally {
-    await connection.end();
-  }
+  // pool.execute 自动获取并释放连接
+  const [results] = await pool.execute(query, params);
+  return results;
 }
 
 export async function queryDbBatch(queries) {
-  const connection = await mysql.createConnection(dbConfig);
-  try {
-    const results = [];
-    for (const { query, params = [] } of queries) {
-      const [result] = await connection.execute(query, params);
-      results.push(result);
-    }
-    return results;
-  } finally {
-    await connection.end();
+  // 使用连接池执行批量查询
+  const results = [];
+  for (const { query, params = [] } of queries) {
+    const [result] = await pool.execute(query, params);
+    results.push(result);
   }
+  return results;
 }
