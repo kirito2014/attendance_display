@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server';
 
 // Database config from env
 const dbConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: parseInt(process.env.DB_PORT || '3306'),
-  charset: process.env.DB_CHARSET,
+  host: process.env.NEXT_SECRET_DB_HOST,
+  user: process.env.NEXT_SECRET_DB_USER,
+  password: process.env.NEXT_SECRET_DB_PASSWORD,
+  database: process.env.NEXT_SECRET_DB_NAME,
+  port: parseInt(process.env.NEXT_SECRET_DB_PORT || '3306'),
+  charset: process.env.NEXT_SECRET_DB_CHARSET,
   connectTimeout: 10000 
 };
 
