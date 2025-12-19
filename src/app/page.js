@@ -136,12 +136,13 @@ export default function Dashboard() {
 
     // --- Chart 1: Sign Checkin Trend ---
     if (charts.current.trend) charts.current.trend.destroy();
-    const ctx1 = trendChartRef.current.getContext('2d');
-    const gradientBlue = ctx1.createLinearGradient(0, 0, 0, 400);
-    gradientBlue.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
-    gradientBlue.addColorStop(1, 'rgba(79, 70, 229, 0)');
+    if (trendChartRef.current) {
+      const ctx1 = trendChartRef.current.getContext('2d');
+      const gradientBlue = ctx1.createLinearGradient(0, 0, 0, 400);
+      gradientBlue.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+      gradientBlue.addColorStop(1, 'rgba(79, 70, 229, 0)');
 
-    charts.current.trend = new Chart(ctx1, {
+      charts.current.trend = new Chart(ctx1, {
       type: 'line',
       data: {
         labels: checkinTrend.map(item => item.time || item.date || item.week || item.month),
@@ -164,9 +165,11 @@ export default function Dashboard() {
         scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } }
       }
     });
+    }
 
     // --- Chart 2: Late Distribution ---
     if (charts.current.late) charts.current.late.destroy();
+    if (lateChartRef.current) {
     charts.current.late = new Chart(lateChartRef.current, {
       type: 'bar',
       data: {
@@ -187,9 +190,11 @@ export default function Dashboard() {
         scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } }
       }
     });
+    }
 
     // --- Chart 3: Overtime ---
     if (charts.current.overtime) charts.current.overtime.destroy();
+    if (overtimeChartRef.current) {
     charts.current.overtime = new Chart(overtimeChartRef.current, {
       type: 'bar',
       data: {
@@ -210,9 +215,11 @@ export default function Dashboard() {
         scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } }
       }
     });
+    }
 
     // --- Chart 4: Batch Distribution ---
     if (charts.current.batch) charts.current.batch.destroy();
+    if (batchChartRef.current) {
     charts.current.batch = new Chart(batchChartRef.current, {
       type: 'doughnut',
       data: {
@@ -231,6 +238,7 @@ export default function Dashboard() {
         plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
       }
     });
+    }
   };
 
   return (
@@ -281,59 +289,75 @@ export default function Dashboard() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <KpiCard 
-                title="总员工数" 
-                value={data?.attendanceStats.totalEmployees ?? '-'} 
-                icon="fa-users" 
-                colorClass="text-blue-600" 
-                bgClass="bg-blue-50"
-                trend="+2"
-                trendUp={true}
-            />
-            <KpiCard 
-                title="实到人数" 
-                value={data?.attendanceStats.totalPresent ?? '-'} 
-                icon="fa-user-check" 
-                colorClass="text-emerald-600" 
-                bgClass="bg-emerald-50"
-                subText={`出勤率 ${data?.attendanceStats.totalEmployees ? Math.round((data?.attendanceStats.totalPresent/data?.attendanceStats.totalEmployees)*100) : 0}%`}
-            />
-            <KpiCard 
-                title="迟到人数" 
-                value={data?.attendanceStats.lateCount ?? '-'} 
-                icon="fa-clock" 
-                colorClass="text-amber-500" 
-                bgClass="bg-amber-50"
-                trend="-3"
-                trendUp={false} // actually good if down
-            />
-            <KpiCard 
-                title="迟到率" 
-                value={(data?.attendanceStats.lateRate ?? 0) + '%'} 
-                icon="fa-percentage" 
-                colorClass="text-rose-500" 
-                bgClass="bg-rose-50"
-                trend="-2.1%"
-                trendUp={false}
-            />
+            {loading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                    <SkeletonKpiCard key={index} />
+                ))
+            ) : (
+                <>
+                    <KpiCard 
+                        title="总员工数" 
+                        value={data?.attendanceStats.totalEmployees ?? '-'} 
+                        icon="fa-users" 
+                        colorClass="text-blue-600" 
+                        bgClass="bg-blue-50"
+                        trend="+2"
+                        trendUp={true}
+                    />
+                    <KpiCard 
+                        title="实到人数" 
+                        value={data?.attendanceStats.totalPresent ?? '-'} 
+                        icon="fa-user-check" 
+                        colorClass="text-emerald-600" 
+                        bgClass="bg-emerald-50"
+                        subText={`出勤率 ${data?.attendanceStats.totalEmployees ? Math.round((data?.attendanceStats.totalPresent/data?.attendanceStats.totalEmployees)*100) : 0}%`}
+                    />
+                    <KpiCard 
+                        title="迟到人数" 
+                        value={data?.attendanceStats.lateCount ?? '-'} 
+                        icon="fa-clock" 
+                        colorClass="text-amber-500" 
+                        bgClass="bg-amber-50"
+                        trend="-3"
+                        trendUp={false} // actually good if down
+                    />
+                    <KpiCard 
+                        title="迟到率" 
+                        value={(data?.attendanceStats.lateRate ?? 0) + '%'} 
+                        icon="fa-percentage" 
+                        colorClass="text-rose-500" 
+                        bgClass="bg-rose-50"
+                        trend="-2.1%"
+                        trendUp={false}
+                    />
+                </>
+            )}
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <ChartCard title="签到趋势" subtitle="24小时/周期内签到曲线" icon="fa-chart-line" iconColor="bg-indigo-50 text-indigo-600">
-                <canvas ref={trendChartRef}></canvas>
-            </ChartCard>
-            <ChartCard title="迟到分布" subtitle="迟到时间段统计" icon="fa-chart-bar" iconColor="bg-amber-50 text-amber-600">
-                <canvas ref={lateChartRef}></canvas>
-            </ChartCard>
-            <ChartCard title="加班时长" subtitle="各部门加班时长统计" icon="fa-business-time" iconColor="bg-purple-50 text-purple-600">
-                <canvas ref={overtimeChartRef}></canvas>
-            </ChartCard>
-            <ChartCard title="签到批次" subtitle="各打卡批次占比" icon="fa-chart-pie" iconColor="bg-emerald-50 text-emerald-600">
-                <div className="h-full flex justify-center">
-                    <canvas ref={batchChartRef}></canvas>
-                </div>
-            </ChartCard>
+            {loading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                    <SkeletonChartCard key={index} />
+                ))
+            ) : (
+                <>
+                    <ChartCard title="签到趋势" subtitle="24小时/周期内签到曲线" icon="fa-chart-line" iconColor="bg-indigo-50 text-indigo-600">
+                        <canvas ref={trendChartRef}></canvas>
+                    </ChartCard>
+                    <ChartCard title="迟到分布" subtitle="迟到时间段统计" icon="fa-chart-bar" iconColor="bg-amber-50 text-amber-600">
+                        <canvas ref={lateChartRef}></canvas>
+                    </ChartCard>
+                    <ChartCard title="加班时长" subtitle="各部门加班时长统计" icon="fa-business-time" iconColor="bg-purple-50 text-purple-600">
+                        <canvas ref={overtimeChartRef}></canvas>
+                    </ChartCard>
+                    <ChartCard title="签到批次" subtitle="各打卡批次占比" icon="fa-chart-pie" iconColor="bg-emerald-50 text-emerald-600">
+                        <div className="h-full flex justify-center">
+                            <canvas ref={batchChartRef}></canvas>
+                        </div>
+                    </ChartCard>
+                </>
+            )}
         </div>
 
         {/* Footer */}
@@ -348,6 +372,39 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+// 骨架屏组件
+function SkeletonKpiCard() {
+    return (
+        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+            <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 animate-pulse"></div>
+                <div className="flex gap-2">
+                    <div className="w-16 h-5 rounded-full bg-slate-100 animate-pulse"></div>
+                </div>
+            </div>
+            <div>
+                <div className="h-4 w-24 bg-slate-100 rounded animate-pulse mb-2"></div>
+                <div className="h-12 w-32 bg-slate-100 rounded animate-pulse"></div>
+            </div>
+        </div>
+    );
+}
+
+function SkeletonChartCard() {
+    return (
+        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <div className="h-5 w-32 bg-slate-100 rounded animate-pulse mb-1"></div>
+                    <div className="h-3 w-48 bg-slate-100 rounded animate-pulse"></div>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-slate-100 animate-pulse"></div>
+            </div>
+            <div className="h-64 bg-slate-100 rounded-xl animate-pulse"></div>
+        </div>
+    );
 }
 
 // Sub-components for cleaner code

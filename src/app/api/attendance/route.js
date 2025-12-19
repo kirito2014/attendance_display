@@ -1,42 +1,5 @@
-import mysql from 'mysql2/promise';
 import { NextResponse } from 'next/server';
-
-// Database config from env
-const dbConfig = {
-  host: process.env.NEXT_SECRET_DB_HOST,
-  user: process.env.NEXT_SECRET_DB_USER,
-  password: process.env.NEXT_SECRET_DB_PASSWORD,
-  database: process.env.NEXT_SECRET_DB_NAME,
-  port: parseInt(process.env.NEXT_SECRET_DB_PORT || '3306'),
-  charset: process.env.NEXT_SECRET_DB_CHARSET,
-  connectTimeout: 10000 
-};
-
-// Establish DB connection
-async function getDbConnection() {
-  try {
-    const connection = await mysql.createConnection(dbConfig);
-    return connection;
-  } catch (error) {
-    console.error('Database connection error:', error);
-    throw error;
-  }
-}
-
-// Execute Query Helper
-async function queryDb(query, params = []) {
-  let connection;
-  try {
-    connection = await getDbConnection();
-    const [results] = await connection.execute(query, params);
-    return results;
-  } catch (error) {
-    console.error('Database query error:', error);
-    throw error;
-  } finally {
-    if (connection) await connection.end();
-  }
-}
+import { queryDb } from '@/lib/db';
 
 // --- Data Generation Functions (Your Logic) ---
 
